@@ -15,13 +15,13 @@ def fib(n):
 def lucas(n):
 	return int(((1 + sqrt(5)) / 2)**n) + (n % 2 == 0)
 
-# Generate fibonacci numbers up to n, or if n is None, then to infinity
+# Generate fibonacci numbers up to n, or, if n is None, then generate to infinity
 def fibonacci_generator(n=None):
-	a, b, c = 0, 1, 0
+	a, b = 0, 1
 
-	while n == None or c < n:
+	while n == None or a < n:
 		yield a
-		a, b, c = b, a + b, c + 1
+		a, b = b, a + b
 
 def pythag_triple(a, b, c):
 	return ((a*a + b*b) == (c*c))

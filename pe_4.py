@@ -1,3 +1,5 @@
+# find the largest palindrome of the product of two 3-digit numbers
+
 from pe_utils import palindromic
 
 i = 0
@@ -15,3 +17,5 @@ for i in range(1000, 100, -1):
 			high_palind = mult
 
 print("highest palindrome: ", high_palind)
+
+# print([x*y for x in range(100, 1000) for y in range(100, 1000)])

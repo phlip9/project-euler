@@ -1,0 +1,11 @@
+# Find the sum of all the multiples of 3 or 5 below 1000
+
+from itertools import count, takewhile, chain
+
+print(sum([i for i in range(1000) if i % 3 == 0 or i % 5 == 0]))
+
+print(sum(set(chain(takewhile(lambda x: x < 1000, count(3, 3)), takewhile(lambda x: x < 1000, count(5, 5))))))
+
+print(sum(filter(lambda x: x % 3 == 0 or x % 5 == 0, range(1000))))
+
+# 233168
