@@ -1,4 +1,6 @@
-__pycache__ # ignore pyc
-*.pyc # ignore pyc
-*~ # vim backup and undo files
+# ignore pyc
+__pycache__
+*.pyc
 
+# vim backup and undo files
+*~
