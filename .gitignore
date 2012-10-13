@@ -1,5 +1,5 @@
 # ignore pyc
-__pycache__
+__pycache__/
 *.pyc
 
 # vim backup and undo files
