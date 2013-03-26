@@ -6,15 +6,8 @@ def cycle_length(n):
 		if 10**i % n == 1:
 			return i
 
-longest_cycle = 0
-d = 0
+longest_cycle = max(filter(lambda x: x[0] != None, zip(map(cycle_length, range(1, 1000)), range(1, 1000))))[1]
 
-for i in range(1, 1000):
-	current_cycle = cycle_length(i)
-	if current_cycle != None and current_cycle > longest_cycle:
-		longest_cycle = current_cycle
-		d = i
-
-print("1/" + str(d), "has cycle length of", longest_cycle)
+print(longest_cycle)
 
 #983
