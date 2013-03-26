@@ -1,21 +1,39 @@
-from math import sqrt, ceil
+from math import sqrt
 from itertools import compress, islice, count, cycle
 from collections import defaultdict
-from functools import reduce
+from functools import reduce, lru_cache
 from operator import mul
 from random import randrange
+
+#
+# Utility Methods
+#
+def perfect_square(n):
+    h = n & 0xF
+    if h != 0 and h != 1 and h != 4 and h != 9:
+        return False
+    else:
+        s = int(sqrt(n))
+        return n == s*s
 
 def palindromic(x):
 	return str(x) == str(x)[::-1]
 
-# approximate fibonacci
-def fib(n):
-	return int(((((1+sqrt(5))/2)**n - ((1-sqrt(5))/2)**n)/sqrt(5)))
-
 def lucas(n):
 	return int(((1 + sqrt(5)) / 2)**n) + (n % 2 == 0)
 
-# Generate fibonacci numbers up to n, or, if n is None, then generate to infinity
+def multiples(n, minimum, maximum):
+    return (n*i for i in range(int(minimum / n) + 1, int(maximum / n) + 1))
+
+def list_to_num(list_num):
+    num = 0
+    list_num = list_num[::-1]
+    for i in enumerate(list_num):
+        num += i[1] * 10**i[0]
+    return num
+
+def num_to_list(num):
+    return map(int, str(num))
 def fibonacci_generator(n=None):
 	a, b = 0, 1
 
@@ -23,25 +41,42 @@ def fibonacci_generator(n=None):
 		yield a
 		a, b = b, a + b
 
+def fib_matrix(n):
+    if n == 0 or n == 1:
+        return n
+    else:
+        return reduce(mult2d, [(0, 1, 1, 1)]*(n - 1))[3]
+
+@lru_cache(maxsize=None)
+def fib_recurse(n):
+    if n == 0 or n == 1:
+        return n
+    else:
+        return fib_recurse(n - 1) + fib_recurse(n - 2)
+
+@lru_cache(maxsize=None)
+def factorial(n):
+    if n > 0:
+        return n * factorial(n - 1)
+    else:
+        return 1
+def mult2d(a, b):
+    return (a[0]*b[0] + a[1]*b[2], a[0]*b[1] + a[1]*b[3], a[2]*b[0] + a[3]*b[2], a[2]*b[1] + a[3]*b[3])
 def pythag_triple(a, b, c):
 	return ((a*a + b*b) == (c*c))
 
 def triangle_num(n):
 	return n*(n+1)/2
 
-# All prime numbers mod 30 result in a number in the set
-# 1, 7, 11, 13, 17, 19, 23, 29
-# except for 2, 3, and 5
 def prime_sieve(n=None):
-	IT_MASK= (1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0)
-	MODULOS= frozenset( (1, 7, 11, 13, 17, 19, 23, 29) )
+	IT_MASK = (1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0)
+	MODULOS = frozenset((1, 7, 11, 13, 17, 19, 23, 29))
 	D = {9:3, 25:5}
-	
-	#don't ask for anything below 5
+
 	yield 2
 	yield 3
 	yield 5
-	
+
 	for i in compress(islice(count(7), 0, None, 2), cycle(IT_MASK)):
 		if n == None or i < n:
 			j = D.pop(i, None)
@@ -67,32 +102,34 @@ def primes_to_n(n, lower=1):
 		else:
 			break
 
-# Miller-Rabin primality test
 def primality_test(n):
-	def test_pass(a, s, d, n):
-		a_pow = pow(a, d, n)
-		if a_pow == 1:
-			return True
-		for i in range(s - 1):
-			if a_pow == n - 1:
-				return True
-			a_pow = a_pow * a_pow % n
-		return a_pow == n - 1
-
-	if n % 2 == 0 and n != 2:
-		return False
-	d = n - 1
-	s = 0
-	while d % 2 == 0:
-		d >>= 1
-		s += 1
-	for repeat in range(20):
-		a = 0
-		while a == 0:
-			a = randrange(n)
-		if not test_pass(a, s, d, n):
-			return False
-	return True
+    """Returns True if n is prime"""
+    def  test_pass(a, s, d, n):
+        a_pow = pow(a, d, n)
+        if a_pow == 1:
+            return True
+        for i in range(s - 1):
+            if a_pow == n - 1:
+                return True
+            a_pow = (a_pow * a_pow) % n
+        return a_pow == n - 1
+    if n % 2 == 0:
+        if n == 2:
+            return True
+        else:
+            return False
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d >>= 1
+        s += 1
+    for i in range(20):
+        a = 0
+        while a == 0:
+            a = randrange(n)
+        if not test_pass(a, s, d, n):
+            return False
+    return True
 
 def factors(x):
 	i = 2
@@ -100,23 +137,27 @@ def factors(x):
 	while i <= limit:
 		if x % i == 0:
 			yield i
-			x = x / i
+			x = x // i
 		else:
 			i += 1
 	if x > 1:
 		yield int(x)
 
-def factor_map(x):
-	for prime in prime_sieve():
-		if prime > x:
-			break
-		exponent = 0
-		while x % prime == 0:
-			exponent, x = exponent + 1, x / prime
-		if exponent != 0:
-			yield prime, exponent
+def factor_map(x, primes=None, distinct=False):
+    if primes == None:
+        primes = prime_sieve()
+    for prime in primes:
+        if prime > x:
+            break
+        exponent = 0
+        while x % prime == 0:
+            exponent, x = exponent + 1, x // prime
+        if exponent != 0:
+            if distinct:
+                yield prime
+            else:
+                yield prime, exponent
 
-# total count of numbers coprime to n
 def totient(n):
 	return reduce(mul, ((p-1) * p ** (exp-1) for p, exp in factor_map(n)), 1)
 
@@ -129,7 +170,6 @@ def map_occurances(nums):
 		intmap[i] += 1
 	return intmap
 
-# tau = number of divisors of n
 def tau(x):
 	facs = list(factors(x))
 	intmap = map_occurances(facs)
@@ -169,7 +209,6 @@ def divisors(x):
 
 	for k in rec_gen():
 		yield k
-
 def proper_divisors(x):
 	return list(divisors(x))[:-1]
 
@@ -203,17 +242,10 @@ def complex_quad_polys(a_range, b_range):
 			if discriminant(1, a, b) < 0:
 				yield a, b
 
-def bits_to_mask(bits):
-	return (2**bits) - 1
 
-def pack_xy(x, y, bits):
-	return x | (y << bits)
+#
+# Test Methods
+#
 
-def unpack_x(xy, mask):
-	return xy & mask
-
-def unpack_y(xy, bits):
-	return xy >> bits
-
-def unpack_xy(xy, mask, bits):
-	return [unpack_x(xy, mask), unpack_y(xy, bits)]
+if __name__ == '__main__':
+    pass
