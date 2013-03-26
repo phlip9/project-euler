@@ -1,6 +1,10 @@
 # ignore pyc
 __pycache__/
 *.pyc
+*.swp
+*.swo
+build/
+.ropeproject/
 
 # vim backup and undo files
 *~
